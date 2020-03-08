@@ -1,0 +1,23 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t alandandronic/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true alandandronic/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t alandandronic/multi-client ./client
+    - docker build -t alandandronic/multi-nginx ./nginx
+    - docker build -t alandandronic/multi-server ./server
+    - docker build -t alandandronic/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password stdin
+    # Take those images and push them to docker hub
+    - docker push alandandronic/multi-client
+    - docker push alandandronic/multi-nginx
+    - docker push alandandronic/multi-server
+    - docker push alandandronic/multi-worker
+    
